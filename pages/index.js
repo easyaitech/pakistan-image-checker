@@ -30,10 +30,10 @@ export default function Home() {
       return;
     }
 
-    // 验证文件大小（10MB）
-    const maxSize = 10 * 1024 * 1024;
+    // 验证文件大小（Vercel 限制 1MB）
+    const maxSize = 1 * 1024 * 1024; // 1MB - Vercel Serverless Function 硬性限制
     if (file.size > maxSize) {
-      setError('图片大小不能超过 10MB');
+      setError(`图片过大（${(file.size / 1024 / 1024).toFixed(2)}MB），Vercel 免费版限制为 1MB 以下。建议使用 URL 输入方式或压缩图片。`);
       return;
     }
 
@@ -150,7 +150,13 @@ export default function Home() {
         } catch (e) {
           // 如果不是 JSON，读取文本
           const errorText = await response.text();
-          errorMessage = `服务器错误 (${response.status}): ${errorText.substring(0, 100)}`;
+
+          // 特殊处理 413 错误（请求体过大）
+          if (response.status === 413) {
+            errorMessage = '图片过大，Vercel 免费版限制为 1MB 以下。建议：1) 使用 URL 输入方式，或 2) 压缩图片到 1MB 以下';
+          } else {
+            errorMessage = `服务器错误 (${response.status}): ${errorText.substring(0, 100)}`;
+          }
         }
         throw new Error(errorMessage);
       }
@@ -232,7 +238,7 @@ export default function Home() {
                 <p style={styles.uploadText}>
                   {imageFile ? imageFile.name : '拖拽图片到此处，或点击上传'}
                 </p>
-                <p style={styles.uploadHint}>支持 PNG、JPEG、JPG、WebP，最大 10MB</p>
+                <p style={styles.uploadHint}>支持 PNG、JPEG、JPG、WebP，最大 1MB（Vercel 免费版限制）</p>
               </div>
             </div>
           )}
