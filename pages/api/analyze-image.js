@@ -28,13 +28,6 @@ export default async function handler(req, res) {
 
     // 验证环境变量
     const apiKey = process.env.OPENROUTER_API_KEY;
-
-    // 调试日志
-    console.log('环境变量检查:');
-    console.log('- apiKey 存在:', !!apiKey);
-    console.log('- apiKey 长度:', apiKey?.length);
-    console.log('- apiKey 前20字符:', apiKey?.substring(0, 20));
-
     if (!apiKey || apiKey.includes('【待填写')) {
       return res.status(500).json({
         error: 'API 密钥未配置，请联系管理员'
