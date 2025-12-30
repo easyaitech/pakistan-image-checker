@@ -99,13 +99,34 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenRouter API 错误:', errorText);
+      console.error('OpenRouter API 错误响应:');
+      console.error('Status:', response.status);
+      console.error('Status Text:', response.statusText);
+      console.error('Body (前500字符):', errorText.substring(0, 500));
       return res.status(500).json({
         error: '图片分析失败，请稍后重试'
       });
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      const responseText = await response.text();
+      console.error('JSON 解析错误:', jsonError);
+      console.error('响应体 (前500字符):', responseText.substring(0, 500));
+      return res.status(500).json({
+        error: 'API 响应解析失败'
+      });
+    }
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('OpenRouter API 响应格式错误:', JSON.stringify(data).substring(0, 500));
+      return res.status(500).json({
+        error: 'API 响应格式错误'
+      });
+    }
+
     const content = data.choices[0].message.content;
 
     // 解析 AI 返回的 JSON

@@ -140,14 +140,26 @@ export default function Home() {
         }),
       });
 
-      const data = await response.json();
-
+      // 先检查响应状态
       if (!response.ok) {
-        throw new Error(data.error || '分析失败');
+        // 尝试读取错误信息
+        let errorMessage = '分析失败';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // 如果不是 JSON，读取文本
+          const errorText = await response.text();
+          errorMessage = `服务器错误 (${response.status}): ${errorText.substring(0, 100)}`;
+        }
+        throw new Error(errorMessage);
       }
+
+      const data = await response.json();
 
       setResult(data);
     } catch (err) {
+      console.error('分析错误:', err);
       setError(err.message || '分析过程中出现错误');
     } finally {
       setAnalyzing(false);
