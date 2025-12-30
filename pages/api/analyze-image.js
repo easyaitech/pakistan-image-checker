@@ -28,9 +28,24 @@ export default async function handler(req, res) {
 
     // 验证环境变量
     const apiKey = process.env.OPENROUTER_API_KEY;
+
+    // 调试日志
+    console.log('环境变量检查:');
+    console.log('- apiKey 存在:', !!apiKey);
+    console.log('- apiKey 长度:', apiKey?.length);
+    console.log('- apiKey 前20字符:', apiKey?.substring(0, 20));
+
     if (!apiKey || apiKey.includes('【待填写')) {
       return res.status(500).json({
         error: 'API 密钥未配置，请联系管理员'
+      });
+    }
+
+    // 检查 apiKey 是否包含变量名（常见错误）
+    if (apiKey.startsWith('OPENROUTER_API_KEY=')) {
+      console.error('❌ 环境变量格式错误，包含变量名');
+      return res.status(500).json({
+        error: '环境变量配置错误（包含变量名）'
       });
     }
 
