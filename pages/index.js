@@ -142,22 +142,25 @@ export default function Home() {
 
       // 先检查响应状态
       if (!response.ok) {
-        // 尝试读取错误信息
         let errorMessage = '分析失败';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          // 如果不是 JSON，读取文本
-          const errorText = await response.text();
 
-          // 特殊处理 413 错误（请求体过大）
-          if (response.status === 413) {
-            errorMessage = '图片过大，Vercel 免费版限制为 1MB 以下。建议：1) 使用 URL 输入方式，或 2) 压缩图片到 1MB 以下';
-          } else {
-            errorMessage = `服务器错误 (${response.status}): ${errorText.substring(0, 100)}`;
+        // 先读取响应体文本（只读一次，避免 "body stream already read" 错误）
+        const responseText = await response.text();
+
+        // 特殊处理 413 错误（请求体过大）
+        if (response.status === 413) {
+          errorMessage = '图片过大，Vercel 免费版限制为 1MB 以下。建议：1) 使用 URL 输入方式，或 2) 压缩图片到 1MB 以下';
+        } else {
+          // 尝试解析为 JSON
+          try {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            // 不是 JSON，使用文本
+            errorMessage = `服务器错误 (${response.status}): ${responseText.substring(0, 100)}`;
           }
         }
+
         throw new Error(errorMessage);
       }
 
